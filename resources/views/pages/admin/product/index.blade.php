@@ -41,7 +41,7 @@
                             <td>{{ $row->category->name }}</td>
                             <td>Rp. <span>{{ number_format($row->price, 0, ',', '.') }}</span></td>
                             <td>
-                                <a href="#" class="btn btn-info">
+                                <a href="{{ route('admin.product.gallery.index', $row->id) }}" class="btn btn-info">
                                     <i class="bi bi-card-image"></i>
                                 </a>
                                 <a href="{{ route('admin.product.edit', $row->id) }}" class="btn btn-warning">
