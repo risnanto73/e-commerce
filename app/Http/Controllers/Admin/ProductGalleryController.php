@@ -54,7 +54,7 @@ class ProductGalleryController extends Controller
 
                 //insert data ke database
                 $product->product_galleries()->create([
-                    'products_id' => $product->id,
+                    'product_id' => $product->id,
                     'image' => $file->hashName()
                 ]);
 
@@ -103,15 +103,15 @@ class ProductGalleryController extends Controller
             //get data product
             $product = $product->findOrFail($product->id);
 
-            //get data image by id
+            //get data gallery
             $gallery = $gallery->findOrFail($gallery->id);
 
             //delete image
             Storage::disk('local')->delete('public/product/gallery/' . basename($gallery->image));
 
-            //delete data image from database
+            //delete data gallery
             $gallery->delete();
-
+            
             return redirect()->route('admin.product.gallery.index', $product->id)->with('success', 'Image deleted successfully');
         } catch (Exception $e) {
             dd($e->getMessage());
