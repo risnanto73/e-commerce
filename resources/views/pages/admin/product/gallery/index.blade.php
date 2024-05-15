@@ -16,6 +16,10 @@
                 </ol>
             </nav>
 
+            <a href="{{ route('admin.product.index') }}" class="btn btn-primary">
+                <i class="bi bi-arrow-left"></i> Back
+            </a>
+
             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#basicModal">
                 <i class="bi bi-plus"></i> Product Gallery
             </button>
@@ -34,16 +38,16 @@
                     @forelse ($product->product_galleries as $row)
                         <tr>
                             <td>{{ $loop->iteration }}</td>
+
                             <td>
-                                <img src="{{ asset('storage/product/gallery/' . $row->image) }}" alt="{{ $row->image }}"
-                                    width="100">
+                                <img src="{{ asset('storage/product/gallery/' . $row->image) }}"
+                                    alt="" class="img-thumbnail" width="100">
                             </td>
                             <td>
-                                <form action="{{ route('admin.product.gallery.destroy', [$product->id, $row->id]) }}"
-                                    method="post">
+                                <form action="{{ route('admin.product.gallery.destroy', [$product->id, $row->id]) }}" method="post">
                                     @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure?')">
+                                    @method('delete')
+                                    <button class="btn btn-danger" type="submit" class="d-inline">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </form>
