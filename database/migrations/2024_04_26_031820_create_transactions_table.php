@@ -19,10 +19,10 @@ return new class extends Migration
             $table->string('email');
             $table->string('phone');
             $table->string('address');
-            $table->string('courier');
-            $table->string('payment');
-            $table->string('payment_url');
-            $table->string('status');
+            $table->string('courier')->nullable();
+            $table->string('payment')->default('midtrans');
+            $table->string('payment_url')->nullable();
+            $table->string('status')->default('PENDING');
             $table->string('total_price');
             $table->timestamps();
         });
