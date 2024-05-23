@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Transaction;
+use App\Models\TransactionItem;
 use Illuminate\Http\Request;
 
 class MyTransactionController extends Controller
@@ -15,7 +16,7 @@ class MyTransactionController extends Controller
     {
         // get data my transaction by user id
         $myTransaction = Transaction::with(['user'])
-            ->where('user_id', auth()->user()->id)->get();
+            ->where('user_id', auth()->user()->id)->latest()->get();
 
         return view('pages.admin.my-transaction.index', compact(
             'myTransaction'
@@ -41,9 +42,16 @@ class MyTransactionController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    // show data by slud and id
+    public function show($slug)
     {
-        //
+        // get data transaction by slug and id with relation
+        $transaction = Transaction::with(['user', 'transaction_item.product.product_galleries'])
+            ->where('id', $slug)->firstOrFail();
+
+        return view('pages.admin.my-transaction.show', compact(
+            'transaction'
+        ));
     }
 
     /**
@@ -68,5 +76,20 @@ class MyTransactionController extends Controller
     public function destroy(string $id)
     {
         //
+    }
+
+    // show data bt slug and id
+    public function showDataBySlugAndId($slug, $id)
+    {
+        // get data transaction by slug and id with relation
+        // $transaction = Transaction::with(['user', 'transaction_items.product.product_galleries'])
+        //     ->where('id', $id)->firstOrFail();
+        // get data transaction by slug and id
+        $transaction = Transaction::where('slug', $slug)
+            ->where('id', $id)->firstOrFail();
+
+        return view('pages.admin.my-transaction.show', compact(
+            'transaction'
+        ));
     }
 }

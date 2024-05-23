@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers\FrontEnd;
 
+use Midtrans\Snap;
 use App\Models\Cart;
+use Midtrans\Config;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\Transaction;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
 use App\Models\TransactionItem;
-use Illuminate\Support\Facades\Auth;
-use Midtrans\Config;
+use App\Http\Controllers\Controller;
 
 class FrontEndController extends Controller
 {
@@ -58,7 +59,8 @@ class FrontEndController extends Controller
     {
         $category = Category::select('id', 'name', 'slug')->latest()->get();
 
-        $cart =  Cart::with('product')->where('user_id', auth()->user()->id)->latest()->get();
+        $cart = Cart::all();
+        // $cart =  Cart::with('product')->where('user_id', auth()->user()->id)->latest()->get();
 
         // dd($cart);
 
@@ -101,72 +103,74 @@ class FrontEndController extends Controller
     public function checkout(Request $request)
     {
         try {
+
+            //request data
             $data = $request->all();
 
-            // get data cart user
+            //get data cart user
             $cart = Cart::with('product')->where('user_id', auth()->user()->id)->get();
-
+            
             // dd($cart);
 
-            // create transaction
+            //create transaction
             $transaction = Transaction::create([
                 'user_id' => auth()->user()->id,
                 'name' => $data['name'],
+                'slug' => Str::slug($data['name']) . '-' . time(),
                 'email' => $data['email'],
-                'phone' => $data['phone'],
                 'address' => $data['address'],
+                'phone' => $data['phone'],
                 'total_price' => $cart->sum('product.price'),
             ]);
+            // dd($transaction);
 
-            // create transaction item
+            //update slug transaction
+            
+            //create transaction item
             foreach ($cart as $item) {
                 TransactionItem::create([
-                    'transaction_id' => $transaction->id,
-                    'product_id' => $item->product_id,
                     'user_id' => auth()->user()->id,
+                    'product_id' => $item->product_id,
+                    'transaction_id' => $transaction->id,
                 ]);
             }
 
-            // delete cart
+            //delete cart
             Cart::where('user_id', auth()->user()->id)->delete();
 
-            // dd($transaction);
-
-            //Configuration Midtrans
-            // use Midtrans/Config;
-            // use Midtrans/Snap; 
+            //setting midtrans
+            // use Midtrans\Config;
+            // use Midtrans\Snap;
             Config::$serverKey = config('services.midtrans.serverKey');
+            Config::$clientKey = config('services.midtrans.clientKey');
             Config::$isProduction = config('services.midtrans.isProduction');
             Config::$isSanitized = config('services.midtrans.isSanitized');
             Config::$is3ds = config('services.midtrans.is3ds');
 
-            //setup variable for midtrans
+            // setup variable for midtrans
             $midtrans = [
                 'transaction_details' => [
-                    'order_id' => 'MIDTRANS-' . $transaction->id,
-                    'gross_amount' => $transaction->total_price,
+                    'order_id' => 'TR' . $transaction->id,
+                    'gross_amount' => (int) $transaction->total_price,
                 ],
-                'customer_details' => [
+                'costumer_details' => [
                     'first_name' => $transaction->name,
                     'email' => $transaction->email,
                     'phone' => $transaction->phone,
                 ],
-                'enabled_payments' => ['gopay', 'bank_transfer'],
+                'enable_payments' => ['gopay', 'bank_transfer'],
                 'vtweb' => []
             ];
 
-            //payment process midtrans
-            $paymentUrl = \Midtrans\Snap::createTransaction($midtrans)->redirect_url;
+            //create payment url from midtrans
+            $paymentUrl = Snap::createTransaction($midtrans)->redirect_url;
 
-            //update payment_url
+            //update payment url
             $transaction->update([
                 'payment_url' => $paymentUrl
             ]);
 
-            // dd($paymentUrl);
-
             return redirect($paymentUrl);
-
 
         } catch (\Exception $e) {
             dd($e->getMessage());
